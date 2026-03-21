@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ArrivEd PH — Courses</title>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --black: #0a0a0a;
+  --surface: #111111;
+  --surface2: #1a1a1a;
+  --border: rgba(255,255,255,0.07);
+  --white: #ffffff;
+  --yellow: #FFD84D;
+  --green: #2DD4A0;
+  --blue: #4A9EFF;
+  --pink: #FF6B9D;
+  --orange: #FF8C42;
+  --muted: #666666;
+  --muted2: #999999;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: var(--black);
+  color: var(--white);
+  overflow-x: hidden;
+}
+
+/* NAV */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  padding: 1.2rem 4rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(10,10,10,0.9);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+
+.logo {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  text-decoration: none;
+  color: var(--white);
+}
+.logo span { color: var(--yellow); }
+
+.nav-links { display: flex; gap: 2rem; list-style: none; }
+.nav-links a {
+  text-decoration: none;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--muted2);
+  transition: color 0.2s;
+}
+.nav-links a:hover { color: var(--white); }
+.nav-links a.active { color: var(--yellow); }
+
+.nav-cta {
+  background: var(--yellow);
+  color: var(--black) !important;
+  padding: 0.55rem 1.3rem;
+  border-radius: 6px;
+  font-weight: 700 !important;
+}
+
+/* HERO */
+.hero {
+  padding: 8rem 4rem 4rem;
+  max-width: 1100px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.grid-bg {
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+  background-size: 50px 50px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.glow {
+  position: fixed;
+  width: 500px; height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(255,216,77,0.06), transparent 70%);
+  top: 0; left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hero-inner { position: relative; z-index: 2; }
+
+.hero-tag {
+  display: inline-block;
+  background: rgba(45,212,160,0.08);
+  border: 1px solid rgba(45,212,160,0.2);
+  color: var(--green);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 0.4rem 1rem;
+  border-radius: 4px;
+  margin-bottom: 1.5rem;
+  animation: fadeUp 0.5s 0.1s both;
+}
+
+.hero h1 {
+  font-family: 'Unbounded', sans-serif;
+  font-size: clamp(2rem, 5vw, 4rem);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+  margin-bottom: 1rem;
+  animation: fadeUp 0.5s 0.2s both;
+}
+
+.hero h1 span { color: var(--yellow); }
+
+.hero-desc {
+  font-size: 1rem;
+  color: var(--muted2);
+  line-height: 1.7;
+  font-weight: 300;
+  max-width: 520px;
+  margin-bottom: 2rem;
+  animation: fadeUp 0.5s 0.3s both;
+}
+
+/* FILTER TABS */
+.filter-tabs {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 3rem;
+  position: relative;
+  z-index: 2;
+  animation: fadeUp 0.5s 0.4s both;
+}
+
+.filter-tab {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 0.45rem 1.1rem;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted2);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-tab:hover { border-color: rgba(255,255,255,0.2); color: var(--white); }
+.filter-tab.active { background: var(--yellow); border-color: var(--yellow); color: var(--black); }
+
+/* COURSES GRID */
+.courses-section {
+  padding: 0 4rem 6rem;
+  max-width: 1100px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 2;
+}
+
+.courses-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+.course-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  transition: all 0.25s;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+}
+
+.course-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255,255,255,0.12);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.4);
+}
+
+.course-thumb {
+  width: 100%;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.course-thumb-text {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 2.5rem;
+  font-weight: 900;
+  opacity: 0.15;
+  letter-spacing: -0.04em;
+}
+
+.course-free-badge {
+  position: absolute;
+  top: 12px; right: 12px;
+  background: var(--green);
+  color: var(--black);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.22rem 0.6rem;
+  border-radius: 4px;
+}
+
+.course-level-badge {
+  position: absolute;
+  top: 12px; left: 12px;
+  background: rgba(0,0,0,0.5);
+  color: rgba(255,255,255,0.7);
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.22rem 0.6rem;
+  border-radius: 4px;
+  backdrop-filter: blur(4px);
+}
+
+.course-body {
+  padding: 1.5rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.course-category {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.course-title {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+  margin-bottom: 0.7rem;
+}
+
+.course-desc {
+  font-size: 0.78rem;
+  color: var(--muted2);
+  line-height: 1.6;
+  font-weight: 300;
+  flex: 1;
+  margin-bottom: 1.2rem;
+}
+
+.course-meta {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.2rem;
+}
+
+.course-meta-item {
+  font-size: 0.7rem;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.meta-dot {
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: var(--muted);
+}
+
+.course-btn {
+  width: 100%;
+  padding: 0.7rem;
+  border-radius: 8px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  color: var(--white);
+  transition: all 0.2s;
+  text-align: center;
+  text-decoration: none;
+  display: block;
+}
+
+.course-btn:hover { background: var(--white); color: var(--black); border-color: var(--white); }
+.course-btn.free { border-color: rgba(45,212,160,0.3); color: var(--green); }
+.course-btn.free:hover { background: var(--green); color: var(--black); border-color: var(--green); }
+
+/* COMING SOON CARD */
+.course-card.coming-soon { opacity: 0.5; }
+.course-card.coming-soon:hover { transform: none; }
+
+.coming-badge {
+  position: absolute;
+  top: 12px; right: 12px;
+  background: rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.6);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.22rem 0.6rem;
+  border-radius: 4px;
+}
+
+/* ENROLL MODAL */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2.5rem;
+  max-width: 420px;
+  width: 100%;
+  transform: translateY(20px);
+  transition: transform 0.2s;
+}
+
+.modal-overlay.open .modal { transform: translateY(0); }
+
+.modal-title {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  margin-bottom: 0.5rem;
+}
+
+.modal-title span { color: var(--yellow); }
+
+.modal-sub {
+  font-size: 0.82rem;
+  color: var(--muted2);
+  margin-bottom: 1.5rem;
+  font-weight: 300;
+  line-height: 1.6;
+}
+
+.modal-input {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.88rem;
+  color: var(--white);
+  outline: none;
+  margin-bottom: 0.8rem;
+  transition: border-color 0.2s;
+}
+
+.modal-input::placeholder { color: var(--muted); }
+.modal-input:focus { border-color: var(--yellow); }
+
+.modal-btn {
+  width: 100%;
+  padding: 0.85rem;
+  background: var(--yellow);
+  color: var(--black);
+  border: none;
+  border-radius: 8px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 0.8rem;
+}
+
+.modal-btn:hover { background: var(--white); }
+
+.modal-close {
+  width: 100%;
+  padding: 0.6rem;
+  background: transparent;
+  color: var(--muted2);
+  border: none;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.modal-close:hover { color: var(--white); }
+.modal-msg { font-size: 0.8rem; min-height: 1.2rem; margin-top: 0.5rem; text-align: center; }
+
+/* BOTTOM CTA */
+.bottom-cta {
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 5rem 4rem;
+  text-align: center;
+}
+
+.bottom-cta h2 {
+  font-family: 'Unbounded', sans-serif;
+  font-size: clamp(1.5rem, 3vw, 2.5rem);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  margin-bottom: 0.8rem;
+}
+
+.bottom-cta h2 span { color: var(--yellow); }
+.bottom-cta p { font-size: 0.9rem; color: var(--muted2); margin-bottom: 2rem; font-weight: 300; }
+
+.back-btn {
+  display: inline-block;
+  background: var(--yellow);
+  color: var(--black);
+  padding: 0.85rem 2rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+.back-btn:hover { background: var(--white); }
+
+/* FOOTER */
+footer {
+  padding: 2rem 4rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.footer-logo {
+  font-family: 'Unbounded', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+}
+.footer-logo span { color: var(--yellow); }
+.footer-copy { font-size: 0.72rem; color: var(--muted); }
+
+/* ANIMATIONS */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.reveal.visible { opacity: 1; transform: none; }
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  nav { padding: 1rem 1.5rem; }
+  nav ul { display: none; }
+  .hero { padding: 6rem 1.5rem 2rem; }
+  .courses-section { padding: 0 1.5rem 4rem; }
+  .courses-grid { grid-template-columns: 1fr; }
+  .bottom-cta { padding: 4rem 1.5rem; }
+  footer { flex-direction: column; gap: 1rem; text-align: center; padding: 1.5rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+<div class="glow"></div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-title">Enroll in <span id="modalCourseName">this course</span></div>
+    <div class="modal-sub">This course is completely free. Enter your details and we will send you access within 24 hours.</div>
+    <input class="modal-input" type="text" placeholder="Your full name" id="modalName"/>
+    <input class="modal-input" type="email" placeholder="Your email address" id="modalEmail"/>
+    <button class="modal-btn" onclick="submitEnroll()">Enroll for Free</button>
+    <button class="modal-close" onclick="closeModal()">Cancel</button>
+    <div class="modal-msg" id="modalMsg"></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <a href="https://claire7892.github.io/arrivedph/" class="logo">Arriv<span>Ed</span> PH</a>
+  <ul class="nav-links">
+    <li><a href="https://claire7892.github.io/arrivedph/">Home</a></li>
+    <li><a href="#" class="active">Courses</a></li>
+    <li><a href="https://www.facebook.com/share/1Zs7cwc9at/" target="_blank">Facebook</a></li>
+    <li><a href="#enroll" class="nav-cta">Enroll Free</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-tag">All Courses — 100% Free</div>
+    <h1>Skills that get you<br/><span>hired or paid.</span></h1>
+    <p class="hero-desc">Every course on ArrivEd PH is designed around real income opportunities. Learn at your own pace, build a portfolio, and start earning.</p>
+
+    <div class="filter-tabs">
+      <button class="filter-tab active" onclick="filterCourses('all', this)">All Courses</button>
+      <button class="filter-tab" onclick="filterCourses('web', this)">Web Design</button>
+      <button class="filter-tab" onclick="filterCourses('marketing', this)">Digital Marketing</button>
+      <button class="filter-tab" onclick="filterCourses('design', this)">Graphic Design</button>
+      <button class="filter-tab" onclick="filterCourses('video', this)">Video Editing</button>
+      <button class="filter-tab" onclick="filterCourses('social', this)">Social Media</button>
+    </div>
+  </div>
+</div>
+
+<!-- COURSES -->
+<div class="courses-section" id="enroll">
+  <div class="courses-grid" id="coursesGrid">
+
+    <!-- WEB DESIGN -->
+    <div class="course-card reveal" data-category="web">
+      <div class="course-thumb" style="background: linear-gradient(135deg, #0d2238, #1a3a5c);">
+        <div class="course-thumb-text" style="color:#4A9EFF">WD</div>
+        <div class="course-free-badge">Free</div>
+        <div class="course-level-badge">Beginner</div>
+      </div>
+      <div class="course-body">
+        <div class="course-category" style="color:#4A9EFF">Web Design and Coding</div>
+        <div class="course-title">HTML and CSS Fundamentals</div>
+        <div class="course-desc">Learn the building blocks of every website. By the end, you will build your first complete webpage from scratch.</div>
+        <div class="course-meta">
+          <div class="course-meta-item"><div class="meta-dot"></div> 4 weeks</div>
+          <div class="course-meta-item"><div class="meta-dot"></div> 20 lessons</div>
+          <div class="course-meta-item"><div class="meta-dot"></div> Certificate</div>
+        </div>
+        <a href="#" class="course-btn free" onclick="openModal('HTML and CSS Fundamentals'); return false;">Enroll for Free</a>
+      </div>
+    </div>
+
+    <div class="course-card reveal" data-category="web">
+      <div class="course-thumb" style="background: linear-gradient(135deg, #0d1a38, #1a2a5c);">
+        <div class="course-thumb-text" style="color:#4A9EFF">JS</div>
+        <div class="course-free-badge">Free</div>
+        <div class="course-level-badge">Intermediate</div>
+      </div>
+      <div class="course-body">
+        <div class="course-category" style="color:#4A9EFF">Web Design and Coding</div>
+        <div class="course-title">JavaScript for Beginners</div>
+        <div class="course-desc">Make your websites interactive. Learn JavaScript and start building real web applications that clients will pay for.</div>
+        <div class="course-meta">
+          <div class="course-meta-item"><div class="meta-dot"></div> 5 weeks</div>
+          <div class="course-meta-item"><div class="meta-dot"></div> 25 lessons</div>
+          <div class="course-meta-item"><div class="meta-dot"></div> Certificate</div>
+        </div>
+        <a href="#" class="course-btn free" onclick="openModal('JavaScript for Beginners'); return false;">Enroll for Free</a>
+      </div>
+    </div>
+
+    <!-- DIGITAL MARKETING -->
+    <div class="course-card reveal" data-category="marketing">
+      <div class="course-thumb" style="background: linear-gradient(135deg, #1a0d38, #3a1a5c);">
+        <div class="course-thumb-text" style="color:#FF6B9D">DM</div>
+        <div class="course-free-badge">Free</div>
+        <div class="course-level-badge">Beginner</div>
+      </div>
+      <div class="course-body">
+        <div class="course-category" style="color:#FF6B9D">Digital Marketing</div>
+        <div class="course-title">Digital Marketing Foundations</div>
+        <div class="course-desc">Learn SEO, email marketing, and paid ads. Get the skills that every business is willing to pay for today.</div>
+        <div class="course-meta">
+          <div class="course-meta-item"><div class="meta-dot"></div> 4 weeks</div>
+          <div class="course-meta-item"><div class="meta-dot"></div> 18 lessons</div>
+          <div class="course-meta-item"><div class="meta-dot"></div> Certificate</div>
+        </div>
+        <a href="#" class="course-btn free" onclick="openModal('Digital Marketing Foundations'); return false;">Enroll for Free</a>
+      </div>
+    </div>
+
+    <div class="course-card reveal" data-category="marketing">
+      <div class="course-thumb" style="background: linear-gradient(135deg, #1a0a30, #2a0a4a);">
+        <div class="course-thumb-text" style="color:#FF6B9D">FB</div>
+        <div class="course-free-badge">Free</div>
+        <div class="course-level-badge">Beginner</div>
+      </div>
+      <div class="course-body">
+        <div class="course-category" style="color:#FF6B9D">Digital Marketing</div>
+        <div class="course-title">Facebook and Instagram Ads</div>
+        <div class="course-desc">Run paid ads that actually convert. Learn how to manage ad campaigns for small businesses and earn as a freelancer.</div>
+        <div class="course-meta">
+          <div class="course-meta-item"><div class="meta-dot"></div> 3 weeks</div>
+          <div class="course-meta-item"><div class="meta-dot"></div> 15 lessons</div>
+          <div class="course-meta-item"><div class="meta-dot"></div> Certificate</div>
+        </div>
+        <a href="#" class="course-btn free" onclick="openModal('Facebook and Instagram Ads'); return false;">Enroll for Free</a>
+      </div>
+    </div>
+
+    <!-- GRAPHIC DESIGN -->
+    <div class="course-card reveal" data-category="design">
+      <div class="course-thumb" style="background: linear-gradient(135deg, #1a0d0d, #3a1a1a);">
+        <div class="course-thumb-text" style="color:#FFD84D">GD</div>
+        <div class="course-free-badge">Free</div>
+        <div class="course-level-badge">Beginner</div>
+      </div>
+      <div class="course-body">
+        <div class="course-category" style="color:#FFD84D">Graphic Design</div>
+        <div class="course-title">Graphic Design with Canva</div>
+        <div class="course-desc">Design logos, social media posts, and marketing materials using Canva. Start taking design clients after this course.</div>
+        <div class="course-meta">
+          <div class="course-meta-item"><div class="meta-dot"></div> 3 weeks</div>
+          <div class="course-meta-item"><div class="meta-dot"></div> 16 lessons</div>
+          <div class="course-meta-item"><div class="meta-dot"></div> Certificate</div>
+        </div>
+        <a href="#" class="course-btn free" onclick="openModal('Graphic Design with Canva'); return false;">Enroll for Free</a>
+      </div>
+    </div>
+
+    <div class="course-card reveal" data-category="design">
+      <div class="course-thumb" style="background: linear-gradient(135deg, #1a1200, #3a2800);">
+        <div class="course-thumb-text" style="color:#FFD84D">PS</div>
+        <div class="course-free-badge">Free</div>
+        <div class="course-level-badge">Intermediate</div>
+      </div>
+      <div class="course-body">
+        <div class="course-category" style="color:#FFD84D">Graphic Design</div>
+        <div class="course-title">Brand Identity Design</div>
+        <div class="course-desc">Learn how to create complete brand identities — logo, colors, typography, and style guide. Command higher rates as a designer.</div>
+        <div class="course-meta">
+          <div class="course-meta-item"><div class="meta-dot"></div> 4 weeks</div>
+          <div class="course-meta-item"><div class="meta-dot"></div> 20 lessons</div>
+          <div class="course-meta-item"><div class="meta-dot"></div> Certificate</div>
+        </div>
+        <a href="#" class="course-btn free" onclick="openModal('Brand Identity Design'); return false;">Enroll for Free</a>
+      </div>
+    </div>
+
+    <!-- VIDEO EDITING -->
+    <div class="course-card reveal" data-category="video">
+      <div class="course-thumb" style="background: linear-gradient(135deg, #0d1a0d, #1a3a1a);">
+        <div class="course-thumb-text" style="color:#2DD4A0">VE</div>
+        <div class="course-free-badge">Free</div>
+        <div class="course-level-badge">Beginner</div>
+      </div>
+      <div class="course-body">
+        <div class="course-category" style="color:#2DD4A0">Video Editing</div>
+        <div class="course-title">Video Editing with CapCut</div>
+        <div class="course-desc">Edit professional videos using CapCut on your phone. Learn cuts, transitions, captions, and effects for social media content.</div>
+        <div class="course-meta">
+          <div class="course-meta-item"><div class="meta-dot"></div> 3 weeks</div>
+          <div class="course-meta-item"><div class="meta-dot"></div> 14 lessons</div>
+          <div class="course-meta-item"><div class="meta-dot"></div> Certificate</div>
+        </div>
+        <a href="#" class="course-btn free" onclick="openModal('Video Editing with CapCut'); return false;">Enroll for Free</a>
+      </div>
+    </div>
+
+    <div class="course-card reveal" data-category="video">
+      <div class="course-thumb" style="background: linear-gradient(135deg, #001a10, #002a18);">
+        <div class="course-thumb-text" style="color:#2DD4A0">YT</div>
+        <div class="course-free-badge">Free</div>
+        <div class="course-level-badge">Intermediate</div>
+      </div>
+      <div class="course-body">
+        <div class="course-category" style="color:#2DD4A0">Video Editing</div>
+        <div class="course-title">YouTube Content Creation</div>
+        <div class="course-desc">Learn how to plan, film, edit, and grow a YouTube channel. Monetize your content or offer your skills to businesses.</div>
+        <div class="course-meta">
+          <div class="course-meta-item"><div class="meta-dot"></div> 4 weeks</div>
+          <div class="course-meta-item"><div class="meta-dot"></div> 18 lessons</div>
+          <div class="course-meta-item"><div class="meta-dot"></div> Certificate</div>
+        </div>
+        <a href="#" class="course-btn free" onclick="openModal('YouTube Content Creation'); return false;">Enroll for Free</a>
+      </div>
+    </div>
+
+    <!-- SOCIAL MEDIA -->
+    <div class="course-card reveal" data-category="social">
+      <div class="course-thumb" style="background: linear-gradient(135deg, #1a0d1a, #2a1a3a);">
+        <div class="course-thumb-text" style="color:#FF8C42">SM</div>
+        <div class="course-free-badge">Free</div>
+        <div class="course-level-badge">Beginner</div>
+      </div>
+      <div class="course-body">
+        <div class="course-category" style="color:#FF8C42">Social Media Management</div>
+        <div class="course-title">Social Media Management Basics</div>
+        <div class="course-desc">Learn how to manage Facebook, Instagram, and TikTok accounts for businesses. One of the most in-demand freelance skills today.</div>
+        <div class="course-meta">
+          <div class="course-meta-item"><div class="meta-dot"></div> 3 weeks</div>
+          <div class="course-meta-item"><div class="meta-dot"></div> 15 lessons</div>
+          <div class="course-meta-item"><div class="meta-dot"></div> Certificate</div>
+        </div>
+        <a href="#" class="course-btn free" onclick="openModal('Social Media Management Basics'); return false;">Enroll for Free</a>
+      </div>
+    </div>
+
+    <div class="course-card reveal" data-category="social">
+      <div class="course-thumb" style="background: linear-gradient(135deg, #1a0800, #3a1200);">
+        <div class="course-thumb-text" style="color:#FF8C42">TK</div>
+        <div class="course-free-badge">Free</div>
+        <div class="course-level-badge">Beginner</div>
+      </div>
+      <div class="course-body">
+        <div class="course-category" style="color:#FF8C42">Social Media Management</div>
+        <div class="course-title">TikTok Marketing for Business</div>
+        <div class="course-desc">Master TikTok content strategy and help businesses grow their audience. High demand, low competition skill right now.</div>
+        <div class="course-meta">
+          <div class="course-meta-item"><div class="meta-dot"></div> 2 weeks</div>
+          <div class="course-meta-item"><div class="meta-dot"></div> 12 lessons</div>
+          <div class="course-meta-item"><div class="meta-dot"></div> Certificate</div>
+        </div>
+        <a href="#" class="course-btn free" onclick="openModal('TikTok Marketing for Business'); return false;">Enroll for Free</a>
+      </div>
+    </div>
+
+    <!-- COMING SOON -->
+    <div class="course-card coming-soon reveal" data-category="all">
+      <div class="course-thumb" style="background: linear-gradient(135deg, #111, #1a1a1a);">
+        <div class="course-thumb-text" style="color:#333">AI</div>
+        <div class="coming-badge">Coming Soon</div>
+      </div>
+      <div class="course-body">
+        <div class="course-category" style="color:var(--muted)">AI Tools and Automation</div>
+        <div class="course-title">AI Tools for Freelancers</div>
+        <div class="course-desc">Use AI tools to work faster, earn more, and deliver better results to your clients. Launching soon.</div>
+        <div class="course-meta">
+          <div class="course-meta-item"><div class="meta-dot"></div> Coming Soon</div>
+        </div>
+        <a href="#" class="course-btn" style="opacity:0.4; pointer-events:none;">Coming Soon</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- BOTTOM CTA -->
+<div class="bottom-cta">
+  <h2>Ready to start<br/><span>learning today?</span></h2>
+  <p>All courses are free. No credit card. No experience needed.</p>
+  <a href="https://claire7892.github.io/arrivedph/" class="back-btn">Back to Home</a>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Arriv<span>Ed</span> PH</div>
+  <div class="footer-copy">2026 ArrivEd PH. All rights reserved.</div>
+</footer>
+
+<script>
+// Scroll reveal
+const reveals = document.querySelectorAll('.reveal');
+const obs = new IntersectionObserver((entries) => {
+  entries.forEach((e, i) => {
+    if (e.isIntersecting) setTimeout(() => e.target.classList.add('visible'), i * 60);
+  });
+}, { threshold: 0.08 });
+reveals.forEach(el => obs.observe(el));
+
+// Filter
+function filterCourses(category, btn) {
+  document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.course-card').forEach(card => {
+    if (category === 'all' || card.dataset.category === category) {
+      card.style.display = 'flex';
+    } else {
+      card.style.display = 'none';
+    }
+  });
+}
+
+// Modal
+function openModal(courseName) {
+  document.getElementById('modalCourseName').textContent = courseName;
+  document.getElementById('modalOverlay').classList.add('open');
+  document.getElementById('modalMsg').textContent = '';
+  document.getElementById('modalName').value = '';
+  document.getElementById('modalEmail').value = '';
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+
+function submitEnroll() {
+  const name = document.getElementById('modalName').value;
+  const email = document.getElementById('modalEmail').value;
+  const msg = document.getElementById('modalMsg');
+
+  if (!name) {
+    msg.style.color = '#FF6B6B';
+    msg.textContent = 'Please enter your name.';
+    return;
+  }
+
+  if (!email.includes('@') || !email.includes('.')) {
+    msg.style.color = '#FF6B6B';
+    msg.textContent = 'Please enter a valid email address.';
+    return;
+  }
+
+  msg.style.color = '#2DD4A0';
+  msg.textContent = 'You are enrolled. We will send you access within 24 hours.';
+
+  setTimeout(() => closeModal(), 2500);
+}
+
+// Close modal on overlay click
+document.getElementById('modalOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+</script>
+</body>
+</html>
