@@ -1,70 +1,47 @@
-// ─────────────────────────────────────────────
-//  ArrivEd PH — AI Hub Backend Proxy
-//  Node.js + Express server
-// ─────────────────────────────────────────────
-
+// ArrivEd PH — AI Hub Backend (Vercel + Groq)
 const express = require('express');
 const cors    = require('cors');
 const fetch   = require('node-fetch');
-require('dotenv').config();
+const path    = require('path');
 
-const app  = express();
-const PORT = process.env.PORT || 3000;
+const app = express();
+app.use(cors());
+app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
-// ── MIDDLEWARE ───────────────────────────────
-app.use(cors());                    // allow requests from your frontend
-app.use(express.json());            // parse JSON bodies
-app.use(express.static('public'));  // serve your HTML frontend from /public folder
-
-// ── HEALTH CHECK ─────────────────────────────
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', message: 'ArrivEd PH AI Server is running 🎓' });
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// ── CLAUDE PROXY ENDPOINT ────────────────────
-// Your frontend calls POST /api/chat
-// This server adds the API key and forwards to Anthropic
 app.post('/api/chat', async (req, res) => {
   const { messages, system } = req.body;
-
-  // Basic validation
   if (!messages || !Array.isArray(messages)) {
     return res.status(400).json({ error: 'messages array is required' });
   }
-
   try {
-    const body = {
-      model:      'claude-sonnet-4-20250514',
-      max_tokens: 1000,
-      messages,
-    };
-    if (system) body.system = system;
+    const groqMessages = system
+      ? [{ role: 'system', content: system }, ...messages]
+      : messages;
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method:  'POST',
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
       headers: {
-        'Content-Type':      'application/json',
-        'x-api-key':         process.env.ANTHROPIC_API_KEY,   // key stays on server!
-        'anthropic-version': '2023-06-01',
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + process.env.GROQ_API_KEY,
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        max_tokens: 1000,
+        messages: groqMessages,
+      }),
     });
 
     const data = await response.json();
-
-    if (data.error) {
-      return res.status(500).json({ error: data.error.message });
-    }
-
-    res.json(data);
-
+    if (data.error) return res.status(500).json({ error: data.error.message });
+    res.json({ content: [{ text: data.choices[0].message.content }] });
   } catch (err) {
-    console.error('API Error:', err.message);
     res.status(500).json({ error: 'Server error: ' + err.message });
   }
 });
 
-// ── START ────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`✅  ArrivEd PH AI Server running at http://localhost:${PORT}`);
-});
+module.exports = app;
