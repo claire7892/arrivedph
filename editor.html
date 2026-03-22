@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ArrivEd PH — Code Editor</title>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;900&family=Plus+Jakarta+Sans:wght@400;500;600&family=Fira+Code&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --black:#0a0a0a;--surface:#111;--surface2:#1a1a1a;
+  --border:rgba(255,255,255,0.08);--white:#fff;
+  --yellow:#FFD84D;--green:#2DD4A0;--blue:#4A9EFF;--red:#FF6B6B;--orange:#FF8C42;
+  --muted:#666;--muted2:#999;
+}
+html,body{height:100%;overflow:hidden;}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--black);color:var(--white);display:flex;flex-direction:column;}
+
+/* TOP BAR */
+.bar{display:flex;align-items:center;gap:0.6rem;padding:0.6rem 1rem;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;flex-wrap:wrap;}
+.logo{font-family:'Unbounded',sans-serif;font-size:0.95rem;font-weight:900;letter-spacing:-0.04em;text-decoration:none;color:var(--white);}
+.logo span{color:var(--yellow);}
+
+/* LANG TABS */
+.tabs{display:flex;gap:0.3rem;flex-wrap:wrap;}
+.tab{padding:0.3rem 0.75rem;border-radius:100px;font-size:0.7rem;font-weight:700;cursor:pointer;border:1.5px solid var(--border);background:transparent;color:var(--muted2);font-family:'Plus Jakarta Sans',sans-serif;transition:all 0.2s;}
+.tab:hover{color:var(--white);}
+.tab.html{background:rgba(74,158,255,0.15);border-color:rgba(74,158,255,0.4);color:var(--blue);}
+.tab.css{background:rgba(255,216,77,0.12);border-color:rgba(255,216,77,0.3);color:var(--yellow);}
+.tab.js{background:rgba(255,140,66,0.12);border-color:rgba(255,140,66,0.3);color:var(--orange);}
+.tab.py{background:rgba(45,212,160,0.12);border-color:rgba(45,212,160,0.3);color:var(--green);}
+
+/* BUTTONS */
+.run{padding:0.3rem 1rem;background:var(--green);color:var(--black);border:none;border-radius:100px;font-family:'Plus Jakarta Sans',sans-serif;font-size:0.72rem;font-weight:700;cursor:pointer;transition:all 0.2s;margin-left:auto;}
+.run:hover{background:var(--white);}
+.clr{padding:0.3rem 0.75rem;background:transparent;color:var(--muted2);border:1.5px solid var(--border);border-radius:100px;font-family:'Plus Jakarta Sans',sans-serif;font-size:0.7rem;font-weight:600;cursor:pointer;transition:all 0.2s;}
+.clr:hover{color:var(--red);border-color:rgba(255,107,107,0.3);}
+
+/* TEMPLATES */
+.tpl-bar{display:flex;gap:0.3rem;padding:0.4rem 1rem;background:var(--surface2);border-bottom:1px solid var(--border);overflow-x:auto;flex-shrink:0;}
+.tpl{padding:0.22rem 0.65rem;background:var(--surface);border:1px solid var(--border);border-radius:4px;font-size:0.65rem;font-weight:600;color:var(--muted2);cursor:pointer;white-space:nowrap;font-family:'Plus Jakarta Sans',sans-serif;transition:all 0.2s;}
+.tpl:hover{color:var(--white);border-color:rgba(255,255,255,0.2);}
+
+/* EDITOR AREA */
+.editor-wrap{display:flex;flex:1;overflow:hidden;}
+
+/* LEFT */
+.left{width:50%;display:flex;flex-direction:column;border-right:1px solid var(--border);}
+.panel-top{display:flex;align-items:center;justify-content:space-between;padding:0.4rem 0.8rem;background:var(--surface2);border-bottom:1px solid var(--border);flex-shrink:0;}
+.panel-tag{font-size:0.62rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:700;}
+.line-info{font-size:0.6rem;color:var(--muted);}
+
+.code-area{display:flex;flex:1;overflow:hidden;}
+.nums{padding:0.8rem 0.5rem;background:var(--surface2);border-right:1px solid var(--border);font-family:'Fira Code',monospace;font-size:0.78rem;line-height:1.65;color:var(--muted);text-align:right;min-width:38px;overflow:hidden;flex-shrink:0;white-space:pre;}
+textarea.code{flex:1;padding:0.8rem;background:var(--black);color:#e6edf3;font-family:'Fira Code',monospace;font-size:0.78rem;line-height:1.65;border:none;outline:none;resize:none;overflow-y:auto;tab-size:2;white-space:pre;overflow-x:auto;}
+textarea.code::selection{background:rgba(74,158,255,0.3);}
+
+/* RIGHT */
+.right{flex:1;display:flex;flex-direction:column;}
+.preview-top{display:flex;align-items:center;justify-content:space-between;padding:0.4rem 0.8rem;background:var(--surface2);border-bottom:1px solid var(--border);flex-shrink:0;}
+.preview-tag{font-size:0.62rem;text-transform:uppercase;letter-spacing:0.1em;font-weight:700;color:var(--green);}
+iframe.preview{flex:1;border:none;background:white;}
+
+/* PYTHON NOTE */
+.py-note{display:none;padding:1rem;margin:1rem;background:rgba(45,212,160,0.05);border:1px solid rgba(45,212,160,0.15);border-radius:8px;font-size:0.78rem;color:rgba(255,255,255,0.6);line-height:1.7;}
+.py-note strong{color:var(--green);display:block;margin-bottom:0.3rem;}
+.py-note a{color:var(--green);}
+
+/* CONSOLE */
+.console{height:100px;background:#0d1117;border-top:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;}
+.con-top{display:flex;align-items:center;justify-content:space-between;padding:0.3rem 0.8rem;background:var(--surface2);border-bottom:1px solid var(--border);flex-shrink:0;}
+.con-label{font-size:0.6rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted2);font-weight:700;}
+.con-clr{font-size:0.6rem;color:var(--muted);cursor:pointer;background:none;border:none;font-family:'Plus Jakarta Sans',sans-serif;}
+.con-clr:hover{color:var(--red);}
+.con-out{flex:1;padding:0.4rem 0.8rem;font-family:'Fira Code',monospace;font-size:0.72rem;color:#e6edf3;overflow-y:auto;line-height:1.6;}
+.con-line{margin-bottom:0.15rem;}
+.con-line.err{color:var(--red);}
+.con-line.ok{color:var(--green);}
+.con-line.inf{color:var(--blue);}
+
+/* STATUS */
+.status{display:flex;gap:1.2rem;padding:0.25rem 1rem;background:var(--surface2);border-top:1px solid var(--border);flex-shrink:0;}
+.st{font-size:0.6rem;color:var(--muted);display:flex;align-items:center;gap:0.3rem;}
+.st-dot{width:4px;height:4px;border-radius:50%;background:var(--green);}
+
+/* MOBILE */
+@media(max-width:700px){
+  .editor-wrap{flex-direction:column;}
+  .left{width:100%;height:50%;border-right:none;border-bottom:1px solid var(--border);}
+  .right{height:50%;}
+  .console{height:70px;}
+}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="bar">
+  <a href="index.html" class="logo">Arriv<span>Ed</span> PH</a>
+  <div class="tabs">
+    <button class="tab html" onclick="setLang('html',this)">HTML</button>
+    <button class="tab" onclick="setLang('css',this)">CSS</button>
+    <button class="tab" onclick="setLang('js',this)">JavaScript</button>
+    <button class="tab" onclick="setLang('py',this)">Python</button>
+  </div>
+  <button class="run" onclick="run()">Run</button>
+  <button class="clr" onclick="clearAll()">Clear</button>
+</div>
+
+<!-- TEMPLATES -->
+<div class="tpl-bar">
+  <button class="tpl" onclick="load('basic')">Basic HTML</button>
+  <button class="tpl" onclick="load('form')">Form</button>
+  <button class="tpl" onclick="load('table')">Table</button>
+  <button class="tpl" onclick="load('full')">Full Page</button>
+  <button class="tpl" onclick="load('styled')">Styled CSS</button>
+  <button class="tpl" onclick="load('calc')">JS Calculator</button>
+  <button class="tpl" onclick="load('dom')">JS DOM</button>
+  <button class="tpl" onclick="load('pybasic')">Python Basics</button>
+</div>
+
+<!-- MAIN -->
+<div class="editor-wrap">
+
+  <!-- LEFT: CODE -->
+  <div class="left">
+    <div class="panel-top">
+      <div class="panel-tag" id="panelTag" style="color:var(--blue)">HTML</div>
+      <div class="line-info" id="lineInfo">1 line</div>
+    </div>
+    <div class="code-area">
+      <div class="nums" id="nums">1</div>
+      <textarea class="code" id="code" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" oninput="onInput()" onkeydown="onTab(event)" onkeyup="onCursor()" onclick="onCursor()"></textarea>
+    </div>
+  </div>
+
+  <!-- RIGHT: PREVIEW -->
+  <div class="right">
+    <div class="preview-top">
+      <div class="preview-tag">Preview</div>
+      <a href="courses.html" style="font-size:0.65rem;color:var(--muted);text-decoration:none;">Back to Courses</a>
+    </div>
+    <div class="py-note" id="pyNote">
+      <strong>Python Mode</strong>
+      Python cannot run directly in the browser. Write your code here to study it, then copy and paste it to <a href="https://replit.com" target="_blank">replit.com</a> or <a href="https://www.programiz.com/python-programming/online-compiler/" target="_blank">programiz.com</a> to run it online for free.
+    </div>
+    <iframe class="preview" id="preview"></iframe>
+    <div class="console">
+      <div class="con-top">
+        <div class="con-label">Console</div>
+        <button class="con-clr" onclick="clearCon()">Clear</button>
+      </div>
+      <div class="con-out" id="conOut"><div class="con-line inf">ArrivEd PH Code Editor — Ready</div></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- STATUS -->
+<div class="status">
+  <div class="st"><div class="st-dot"></div>Ready</div>
+  <div class="st" id="stLang">HTML</div>
+  <div class="st" id="stCursor">Line 1, Col 1</div>
+  <div class="st">ArrivEd PH</div>
+</div>
+
+<script>
+var lang = 'html';
+var timer = null;
+
+var starter = {
+html:`<!DOCTYPE html>
+<html>
+<head>
+  <title>My Page</title>
+</head>
+<body>
+  <h1>Hello, ArrivEd PH!</h1>
+  <p>I am learning to build websites.</p>
+  <a href="#">Click here</a>
+</body>
+</html>`,
+
+css:`<!DOCTYPE html>
+<html>
+<head>
+<style>
+  body {
+    background: #0a0a0a;
+    font-family: sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    margin: 0;
+  }
+  .card {
+    background: #111;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 2rem;
+    text-align: center;
+    max-width: 380px;
+  }
+  h1 { color: #FFD84D; font-size: 2rem; margin-bottom: 1rem; }
+  p { color: #999; line-height: 1.6; }
+  .btn {
+    background: #FFD84D;
+    color: #000;
+    padding: 10px 24px;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 1rem;
+  }
+  .btn:hover { background: white; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>ArrivEd PH</h1>
+    <p>This is a CSS styled page. Edit the styles and see the changes live.</p>
+    <button class="btn">Click Me</button>
+  </div>
+</body>
+</html>`,
+
+js:`<!DOCTYPE html>
+<html>
+<head>
+<style>
+  body { background: #0a0a0a; color: white; font-family: sans-serif; padding: 2rem; }
+  button { background: #4A9EFF; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; margin: 5px; font-size: 0.9rem; }
+  #out { background: #111; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1rem; margin-top: 1rem; min-height: 60px; font-size: 1rem; }
+</style>
+</head>
+<body>
+  <h2>JavaScript Playground</h2>
+  <button onclick="hello()">Say Hello</button>
+  <button onclick="changeColor()">Random Color</button>
+  <button onclick="countUp()">Count</button>
+  <div id="out">Click a button above...</div>
+  <script>
+    var count = 0;
+    function hello() { document.getElementById('out').textContent = 'Hello from JavaScript!'; }
+    function changeColor() {
+      var c = ['#FFD84D','#4A9EFF','#2DD4A0','#FF6B9D','#FF8C42'];
+      var r = c[Math.floor(Math.random()*c.length)];
+      document.getElementById('out').style.color = r;
+      document.getElementById('out').textContent = 'Color: ' + r;
+    }
+    function countUp() { count++; document.getElementById('out').textContent = 'Count: ' + count; }
+  <\/script>
+</body>
+</html>`,
+
+py:`# ArrivEd PH — Python Code
+# Python cannot run in the browser.
+# Copy this code and paste it on replit.com to run it.
+
+# Variables
+name = "ArrivEd Student"
+age = 18
+
+# Print
+print("Hello,", name)
+print("Age:", age)
+
+# List
+skills = ["HTML", "CSS", "JavaScript", "Python"]
+print("\\nSkills:")
+for skill in skills:
+    print("-", skill)
+
+# Function
+def greet(person):
+    return "Welcome to ArrivEd PH, " + person + "!"
+
+print("\\n" + greet(name))
+
+# Simple math
+nums = [10, 20, 30, 40, 50]
+print("\\nSum:", sum(nums))
+print("Average:", sum(nums) / len(nums))`
+};
+
+var templates = {
+basic:`<!DOCTYPE html>
+<html>
+<head><title>My Page</title></head>
+<body>
+  <h1>Page Title</h1>
+  <p>This is a paragraph.</p>
+  <a href="#">Click here</a>
+</body>
+</html>`,
+
+form:`<!DOCTYPE html>
+<html>
+<head><title>Contact Form</title></head>
+<body>
+  <h2>Contact Us</h2>
+  <form>
+    <label>Name:</label><br/>
+    <input type="text" placeholder="Your name"/><br/><br/>
+    <label>Email:</label><br/>
+    <input type="email" placeholder="Your email"/><br/><br/>
+    <label>Message:</label><br/>
+    <textarea rows="4" placeholder="Your message"></textarea><br/><br/>
+    <button type="submit">Send</button>
+  </form>
+</body>
+</html>`,
+
+table:`<!DOCTYPE html>
+<html>
+<head>
+<style>
+  table{border-collapse:collapse;width:100%;}
+  th,td{border:1px solid #ddd;padding:8px;text-align:left;}
+  th{background:#4A9EFF;color:white;}
+  tr:nth-child(even){background:#f2f2f2;}
+</style>
+</head>
+<body>
+  <h2>Skills Table</h2>
+  <table>
+    <tr><th>Name</th><th>Skill</th><th>Level</th></tr>
+    <tr><td>Juan</td><td>HTML</td><td>Beginner</td></tr>
+    <tr><td>Maria</td><td>CSS</td><td>Intermediate</td></tr>
+    <tr><td>Jose</td><td>JavaScript</td><td>Advanced</td></tr>
+  </table>
+</body>
+</html>`,
+
+full:`<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:sans-serif;}
+  header{background:#1a3a5c;color:white;padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;}
+  .logo{font-size:1.4rem;font-weight:bold;}
+  nav a{color:white;text-decoration:none;margin-left:1.5rem;}
+  .hero{background:linear-gradient(135deg,#0d2238,#1a3a5c);color:white;padding:5rem 2rem;text-align:center;}
+  .hero h1{font-size:2.5rem;margin-bottom:1rem;}
+  .hero p{opacity:0.7;margin-bottom:2rem;}
+  .btn{background:#FFD84D;color:#000;padding:12px 28px;border:none;border-radius:6px;font-weight:bold;cursor:pointer;font-size:1rem;}
+  .services{padding:4rem 2rem;text-align:center;}
+  .services h2{font-size:2rem;margin-bottom:2rem;}
+  .cards{display:flex;gap:1.5rem;justify-content:center;flex-wrap:wrap;}
+  .card{background:#f5f5f5;padding:2rem;border-radius:8px;width:180px;}
+  footer{background:#0a0a0a;color:white;text-align:center;padding:1.5rem;}
+</style>
+</head>
+<body>
+  <header>
+    <div class="logo">MyBusiness</div>
+    <nav><a href="#">Home</a><a href="#">Services</a><a href="#">Contact</a></nav>
+  </header>
+  <div class="hero">
+    <h1>Welcome to My Business</h1>
+    <p>We provide the best services for your needs.</p>
+    <button class="btn">Get Started</button>
+  </div>
+  <div class="services">
+    <h2>Our Services</h2>
+    <div class="cards">
+      <div class="card"><h3>Web Design</h3><p>Beautiful websites.</p></div>
+      <div class="card"><h3>Marketing</h3><p>Grow your audience.</p></div>
+      <div class="card"><h3>Support</h3><p>We are here to help.</p></div>
+    </div>
+  </div>
+  <footer>2026 MyBusiness. All rights reserved.</footer>
+</body>
+</html>`,
+
+styled:`<!DOCTYPE html>
+<html>
+<head>
+<style>
+  body{background:#f5f5f5;font-family:'Segoe UI',sans-serif;padding:2rem;}
+  .container{max-width:500px;margin:0 auto;background:white;padding:2rem;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.1);}
+  h1{color:#1a3a5c;font-size:2rem;margin-bottom:1rem;}
+  p{color:#666;line-height:1.7;margin-bottom:1rem;}
+  .tag{display:inline-block;background:#e8f2ff;color:#4A9EFF;padding:4px 12px;border-radius:100px;font-size:0.8rem;font-weight:600;margin-right:8px;}
+</style>
+</head>
+<body>
+  <div class="container">
+    <h1>Styled with CSS</h1>
+    <p>This page uses CSS to look professional. Edit the styles and see changes.</p>
+    <span class="tag">HTML</span>
+    <span class="tag">CSS</span>
+    <span class="tag">Design</span>
+  </div>
+</body>
+</html>`,
+
+calc:`<!DOCTYPE html>
+<html>
+<head>
+<style>
+  body{font-family:sans-serif;padding:2rem;background:#0a0a0a;color:white;}
+  input{padding:10px;border-radius:6px;border:1px solid #333;background:#111;color:white;font-size:1rem;width:180px;margin:4px;}
+  button{padding:10px 16px;background:#FFD84D;color:black;border:none;border-radius:6px;font-weight:bold;cursor:pointer;margin:4px;}
+  #res{margin-top:1rem;font-size:1.2rem;color:#2DD4A0;background:#111;padding:1rem;border-radius:8px;}
+</style>
+</head>
+<body>
+  <h2>Calculator</h2>
+  <input type="number" id="a" placeholder="First number"/>
+  <input type="number" id="b" placeholder="Second number"/>
+  <br/>
+  <button onclick="calc('+')">Add</button>
+  <button onclick="calc('-')">Subtract</button>
+  <button onclick="calc('*')">Multiply</button>
+  <button onclick="calc('/')">Divide</button>
+  <div id="res">Enter numbers above.</div>
+  <script>
+    function calc(op){
+      var a=parseFloat(document.getElementById('a').value);
+      var b=parseFloat(document.getElementById('b').value);
+      var r;
+      if(op==='+')r=a+b;
+      else if(op==='-')r=a-b;
+      else if(op==='*')r=a*b;
+      else r=b===0?'Cannot divide by zero':a/b;
+      document.getElementById('res').textContent=a+' '+op+' '+b+' = '+r;
+    }
+  <\/script>
+</body>
+</html>`,
+
+dom:`<!DOCTYPE html>
+<html>
+<head>
+<style>
+  body{font-family:sans-serif;padding:2rem;background:#0a0a0a;color:white;}
+  .box{width:120px;height:120px;border-radius:12px;background:#4A9EFF;display:flex;align-items:center;justify-content:center;font-weight:bold;cursor:pointer;transition:all 0.3s;margin-bottom:1rem;}
+  button{padding:8px 16px;background:#333;color:white;border:none;border-radius:6px;cursor:pointer;margin:4px;font-size:0.85rem;}
+  #count{font-size:2rem;font-weight:bold;color:#FFD84D;margin:1rem 0;}
+</style>
+</head>
+<body>
+  <h2>DOM Events</h2>
+  <div class="box" id="box" onclick="changeColor()">Click Me</div>
+  <p>Counter: <span id="count">0</span></p>
+  <button onclick="inc()">Add</button>
+  <button onclick="dec()">Subtract</button>
+  <button onclick="rst()">Reset</button>
+  <script>
+    var colors=['#4A9EFF','#FFD84D','#2DD4A0','#FF6B9D','#FF8C42'];
+    var ci=0, n=0;
+    function changeColor(){ci=(ci+1)%colors.length;document.getElementById('box').style.background=colors[ci];}
+    function inc(){n++;document.getElementById('count').textContent=n;}
+    function dec(){n--;document.getElementById('count').textContent=n;}
+    function rst(){n=0;document.getElementById('count').textContent=n;}
+  <\/script>
+</body>
+</html>`,
+
+pybasic:`# Python Basics — ArrivEd PH
+# Copy this and run it on replit.com
+
+# 1. Variables
+name = "Student"
+age = 18
+is_learning = True
+
+# 2. Print
+print("Name:", name)
+print("Age:", age)
+
+# 3. If / Else
+if age >= 18:
+    print("You are an adult.")
+else:
+    print("You are a minor.")
+
+# 4. Loop
+for i in range(1, 6):
+    print("Number:", i)
+
+# 5. List
+fruits = ["apple", "banana", "mango"]
+for fruit in fruits:
+    print(fruit)
+
+# 6. Function
+def add(a, b):
+    return a + b
+
+print("5 + 3 =", add(5, 3))`
+};
+
+// INIT
+window.onload = function(){
+  document.getElementById('code').value = starter.html;
+  updateNums();
+  run();
+};
+
+function setLang(l, btn){
+  lang = l;
+  document.querySelectorAll('.tab').forEach(t => t.className = 'tab');
+  btn.className = 'tab ' + l;
+  document.getElementById('panelTag').textContent = l === 'py' ? 'Python' : l.toUpperCase();
+  var colors = {html:'var(--blue)',css:'var(--yellow)',js:'var(--orange)',py:'var(--green)'};
+  document.getElementById('panelTag').style.color = colors[l];
+  document.getElementById('stLang').textContent = l === 'py' ? 'Python' : l.toUpperCase();
+  document.getElementById('code').value = starter[l];
+  updateNums();
+  var pyNote = document.getElementById('pyNote');
+  var preview = document.getElementById('preview');
+  if(l === 'py'){
+    pyNote.style.display = 'block';
+    preview.style.display = 'none';
+    log('Python mode — paste your code on replit.com to run it.', 'inf');
+  } else {
+    pyNote.style.display = 'none';
+    preview.style.display = 'block';
+    run();
+  }
+}
+
+function load(name){
+  if(lang === 'py' && name === 'pybasic'){
+    document.getElementById('code').value = templates.pybasic;
+  } else {
+    document.getElementById('code').value = templates[name] || starter[lang];
+    if(lang !== 'py') run();
+  }
+  updateNums();
+}
+
+function run(){
+  if(lang === 'py') return;
+  var code = document.getElementById('code').value;
+  var frame = document.getElementById('preview');
+  try{
+    var doc = frame.contentDocument || frame.contentWindow.document;
+    doc.open(); doc.write(code); doc.close();
+    log('Code ran successfully.','ok');
+  } catch(e){
+    log('Error: ' + e.message,'err');
+  }
+}
+
+var autoTimer;
+function onInput(){
+  updateNums();
+  clearTimeout(autoTimer);
+  if(lang !== 'py') autoTimer = setTimeout(run, 700);
+}
+
+function updateNums(){
+  var lines = document.getElementById('code').value.split('\n').length;
+  var arr = [];
+  for(var i=1;i<=lines;i++) arr.push(i);
+  document.getElementById('nums').textContent = arr.join('\n');
+  document.getElementById('lineInfo').textContent = lines + (lines===1?' line':' lines');
+}
+
+function onTab(e){
+  if(e.key==='Tab'){
+    e.preventDefault();
+    var t = document.getElementById('code');
+    var s = t.selectionStart;
+    t.value = t.value.substring(0,s)+'  '+t.value.substring(t.selectionEnd);
+    t.selectionStart = t.selectionEnd = s+2;
+    updateNums();
+  }
+}
+
+function onCursor(){
+  var t = document.getElementById('code');
+  var text = t.value.substring(0, t.selectionStart);
+  var lines = text.split('\n');
+  document.getElementById('stCursor').textContent = 'Line '+lines.length+', Col '+(lines[lines.length-1].length+1);
+}
+
+function clearAll(){
+  document.getElementById('code').value='';
+  updateNums();
+  if(lang!=='py'){
+    var frame=document.getElementById('preview');
+    var doc=frame.contentDocument||frame.contentWindow.document;
+    doc.open();doc.write('');doc.close();
+  }
+  log('Editor cleared.','inf');
+}
+
+function log(msg, type){
+  var out = document.getElementById('conOut');
+  var d = document.createElement('div');
+  d.className = 'con-line ' + (type||'');
+  d.textContent = '['+new Date().toLocaleTimeString()+'] '+msg;
+  out.appendChild(d);
+  out.scrollTop = out.scrollHeight;
+}
+
+function clearCon(){
+  document.getElementById('conOut').innerHTML='';
+  log('Console cleared.','inf');
+}
+
+document.getElementById('code').addEventListener('scroll',function(){
+  document.getElementById('nums').scrollTop = this.scrollTop;
+});
+</script>
+</body>
+</html>
